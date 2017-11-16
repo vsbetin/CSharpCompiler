@@ -11,11 +11,11 @@ namespace CodeAnalizer.ViewModels
 {
     class ViewModel : ViewModelBase
     {
-        LexicalAnalyzer _analizer;
+        LexicalAnalyzer _lexicalAnalizer;
 
         public ViewModel()
         {
-            _analizer = new LexicalAnalyzer();
+            _lexicalAnalizer = new LexicalAnalyzer();
             Rows = "1";
             ProgramText = @"prog first
 int a, b, c;
@@ -91,6 +91,17 @@ int a, b, c;
             }
         }
 
+        private string _syntaxAnalizerText;
+
+        public string SyntaxAnalizerText
+        {
+            get { return _syntaxAnalizerText; }
+            set
+            {
+                SetProperty(ref _syntaxAnalizerText, value, "SyntaxAnalizerText");
+            }
+        }
+
         RelayCommand _addRow;
         public RelayCommand AddRow
         {
@@ -129,10 +140,13 @@ int a, b, c;
 
         private void ExecuteRun(object obj)
         {
-            var output = _analizer.Run(ProgramText);
+            var output = _lexicalAnalizer.Run(ProgramText);
+            
             LexemeText = output.lexemeText;
             IdentifierText = output.identifiersText;
             ConstantText = output.constantText;
+
+            SyntaxAnalizerText = new SyntaxAnalizer().Process(_lexicalAnalizer.GetTokens());
         }
     }
 }

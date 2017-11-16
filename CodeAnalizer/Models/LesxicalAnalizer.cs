@@ -10,9 +10,9 @@ namespace CodeAnalizer.Models
     class LexicalAnalyzer
     {
         private static List<string> terminalTokens = new List<string>
-        {   "prog", "int", "float", "double", "read", "write", "if", "then",
+        {   "prog", "int", "float", "double", "read", "write", "if", "else", "then",
             "for", "do", "or", "and", "not", "{", "}", ";", ",", "=", "(",
-            ")", ":", "+", "-", "*", "/", "[", "]", "<", "<=", ">", ">=", "==", "!=", "idn", "con"};
+            ")", ":", "+", "-", "*", "/", "[", "]", "<", "<=", ">", ">=", "==", "<>", "idn", "con"};
 
 
         private static List<char> tokenSeparators = new List<char>
@@ -32,6 +32,8 @@ namespace CodeAnalizer.Models
         private StringBuilder outputIdentifiers;
 
         private int rowCount;
+
+        public List<Token> GetTokens() => tokens;
 
         public (string lexemeText, string identifiersText, string constantText) Run(string programText)
         {
@@ -100,15 +102,15 @@ namespace CodeAnalizer.Models
                                 checkLex(">");
                             break;
 
-                        case '!':
-                            if (programText[i + 1] == '=')
-                            {
-                                checkLex("!=");
-                                i++;
-                            }
-                            else
-                                checkLex("!");
-                            break;
+                        //case '!':
+                        //    if (programText[i + 1] == '=')
+                        //    {
+                        //        checkLex("!=");
+                        //        i++;
+                        //    }
+                        //    else
+                        //        checkLex("!");
+                        //    break;
 
                         default:
                             result = checkLex(programText[i].ToString());
@@ -172,12 +174,13 @@ namespace CodeAnalizer.Models
                 if (lex == "-")
                 {
                     Token lastToken = (Token)tokens[tokens.Count - 1];
-                    if ((lastToken.Value == "idn") || (lastToken.Value == "con"))
+                    if ((lastToken.GeneralizedValue == "idn") || (lastToken.GeneralizedValue == "con"))
                         lex = "-B";
-                    else lex = "-U";
+                    else
+                        lex = "-U";
                 }
                 tokens.Add(new Token(lex, getTokenIndex(lex), rowCount));
-                if (!varDeclareFlag && (lex == "strict" || lex == "int" || lex == "double"))
+                if (!varDeclareFlag && (lex == "float" || lex == "int" || lex == "double"))
                     varDeclareFlag = true;
                 else if ((varDeclareFlag) && (lex == ";"))
                     varDeclareFlag = false;
@@ -191,7 +194,7 @@ namespace CodeAnalizer.Models
                     tokens.Add(new Constant(constant.Value, constant.Index, rowCount, constant.ClassIndex));
                 else
                 {
-                    constants.Add(new Constant(lex, terminalTokens.IndexOf("con"), rowCount, constants.Count + 1));
+                    constants.Add(new Constant(lex, getTokenIndex("con"), rowCount, constants.Count + 1));
                     tokens.Add(constants.Last());
                 }
                 return true;
@@ -206,7 +209,7 @@ namespace CodeAnalizer.Models
                         error(1, lex);
                         return false;
                     }
-                    identifiers.Add(new Identifier(lex, terminalTokens.IndexOf("idn"), rowCount, identifiers.Count + 1));
+                    identifiers.Add(new Identifier(lex, getTokenIndex("idn"), rowCount, identifiers.Count + 1));
                     tokens.Add(identifiers.Last());
                     return true;
                 }
@@ -248,10 +251,10 @@ namespace CodeAnalizer.Models
         private int getTokenIndex(string token)
         {
             if (token == "-U")
-                return terminalTokens.IndexOf("-");
-            if (token == "-B")
                 return terminalTokens.IndexOf("-") + 1;
-            for (int i = 0; i < terminalTokens.IndexOf("-") - 1; i++)
+            if (token == "-B")
+                return terminalTokens.IndexOf("-") + 2;
+            for (int i = 0; i < terminalTokens.IndexOf("-"); i++)
             {
                 if (terminalTokens[i].Equals(token)) return i + 1;
             }
