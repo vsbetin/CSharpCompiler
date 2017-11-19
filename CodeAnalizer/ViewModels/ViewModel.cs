@@ -25,11 +25,11 @@ int a, b, c;
     for (b = 1; b < 20; 5)
     {
         c = a + b;
-    }
+    };
     if (c >= 25) 
     {
         c = c + 5;
-    }
+    };
     write(a, b, c);
 }";
             ExecuteAddRow(null);
@@ -146,7 +146,7 @@ int a, b, c;
             IdentifierText = output.identifiersText;
             ConstantText = output.constantText;
 
-            SyntaxAnalizerText = new SyntaxAnalizer().Process(_lexicalAnalizer.GetTokens());
+            SyntaxAnalizerText = new SyntaxAnalizerRecursiveDescent().Process(_lexicalAnalizer.GetTokens());
         }
     }
 }

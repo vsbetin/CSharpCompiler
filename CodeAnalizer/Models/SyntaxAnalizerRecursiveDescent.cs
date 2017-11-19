@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CodeAnalizer.Models
 {
-    class SyntaxAnalizer
+    class SyntaxAnalizerRecursiveDescent
     {
         private List<Token> lexemes;
         private string result;
@@ -14,7 +14,7 @@ namespace CodeAnalizer.Models
         private int i;
         private bool erroreFlag = false;
 
-        public SyntaxAnalizer()
+        public SyntaxAnalizerRecursiveDescent()
         {
             result = "";
             currentRow = 1;
@@ -35,12 +35,12 @@ namespace CodeAnalizer.Models
         {
             try
             {
-                if (Check("prog") &&
-                    Check("idn") &&
+                if (CheckLexeme("prog") &&
+                    CheckLexeme("idn") &&
                     DeclarationList() &&
-                    Check("{") &&
+                    CheckLexeme("{") &&
                     OperatorsList() &&
-                    Check("}")
+                    CheckLexeme("}")
                     )
                 {
                     while ((i < lexemes.Count) && lexemes[i].GeneralizedValue.Equals("NL"))
@@ -62,7 +62,7 @@ namespace CodeAnalizer.Models
                 else
                 {
                     currentRow--;
-                    Errore("Errore in PROG definition");
+                    Errore("Errore");
                 }
             }
             catch (Exception)
@@ -79,12 +79,12 @@ namespace CodeAnalizer.Models
             {
                 if (Declaration())
                 {
-                    if (Check(";"))
+                    if (CheckLexeme(";"))
                     {
                         int savedI = i;
                         while (Declaration())
                         {
-                            if (!Check(";"))
+                            if (!CheckLexeme(";"))
                                 return false;
                             else
                             {
@@ -98,7 +98,7 @@ namespace CodeAnalizer.Models
             }
             catch (ArgumentOutOfRangeException)
             {
-                ErroreOut("Errore in declaration");
+                ErroreOut("Errore");
             }
             Errore("Errore in declaration list");
             return false;
@@ -108,9 +108,7 @@ namespace CodeAnalizer.Models
         {
             try
             {
-
-
-                if (Check("int") || Check("float") || Check("double"))
+                if (CheckLexeme("int") || CheckLexeme("float") || CheckLexeme("double"))
                 {
                     if (IdentifiersList())
                         return true;
@@ -126,7 +124,7 @@ namespace CodeAnalizer.Models
             catch (ArgumentOutOfRangeException)
             {
                 currentRow--;
-                ErroreOut("Errore in declaration");
+                ErroreOut("Errore");
             }
             return false;
         }
@@ -135,12 +133,12 @@ namespace CodeAnalizer.Models
         {
             try
             {
-                if (Check("idn"))
+                if (CheckLexeme("idn"))
                 {
                     int savedI = i;
-                    while (Check(","))
+                    while (CheckLexeme(","))
                     {
-                        if (!Check("idn"))
+                        if (!CheckLexeme("idn"))
                             return false;
                         else
                         {
@@ -154,7 +152,7 @@ namespace CodeAnalizer.Models
             catch (ArgumentOutOfRangeException)
             {
                 currentRow--;
-                ErroreOut("Errore in list of identifiers");
+                ErroreOut("Errore");
             }
             currentRow--;
             Errore("Errore in declaration");
@@ -165,12 +163,12 @@ namespace CodeAnalizer.Models
         {
             try
             {
-                if (Operator() && Check(";"))
+                if (Operator() && CheckLexeme(";"))
                 {
                     int savedI = i;
                     while (Operator())
                     {
-                        if (!Check(";") && lexemes[i - 1].Value != "}")
+                        if (!CheckLexeme(";"))
                             return false;
                         else
                         {
@@ -183,7 +181,7 @@ namespace CodeAnalizer.Models
             }
             catch (ArgumentOutOfRangeException)
             {
-                ErroreOut("Wrong list of operators");
+                ErroreOut("Errore");
             }
             return false;
         }
@@ -194,97 +192,37 @@ namespace CodeAnalizer.Models
             try
             {
                 int saveID = i;
-                if (Check("idn"))
+                if (CheckPrisv())
                 {
-                    if (Check("=") && Expression())
-                        return true;
-                    else
-                    {
-                        Errore("Wrong code after identifier");
-                        return false;
-                    }
+                    return true;
                 }
                 else
                 {
                     i = saveID;
-                    if (Check("read"))
+                    if (CheckRead())
                     {
-                        if (Check("(") && IdentifiersList() && Check(")"))
-                            return true;
-                        else
-                        {
-                            Errore("Wrong code after read function");
-                            return false;
-                        }
+                        return true;
                     }
                     else
                     {
                         i = saveID;
-                        if (Check("write"))
+                        if (ChekWrite())
                         {
-                            if (Check("(") && IdentifiersList() && Check(")"))
-                                return true;
-                            else
-                            {
-                                Errore("Wrong code after write function");
-                                return false;
-                            }
+                            return true;
                         }
                         else
                         {
                             i = saveID;
-                            if (Check("for"))
+                            if (CheckFor())
                             {
-                                if (Check("(") &&
-                                Check("idn") && Check("=") && Expression() && Check(";") &&
-                                Relation() && Check(";") && Expression() && Check(")") &&
-                                Check("{"))
-                                {
-                                    if (OperatorsList())
-                                    {
-                                        if (Check("}"))
-                                            return true;
-                                        else
-                                        {
-                                            Errore("Errore in FOR definition");
-                                            return false;
-                                        }
-                                    }
-                                    else
-                                        return false;
-                                }
-                                else
-                                {
-                                    Errore("Errore in FOR definition");
-                                    return false;
-                                }
-
+                                return true;
                             }
                             else
                             {
                                 i = saveID;
-                                if (Check("if"))
+                                if (CheckIf())
                                 {
-                                    if (Check("(") && Relation() && Check(")") && Check("{"))
-                                    {
-                                        if (OperatorsList())
-                                        {
-                                            if (Check("}"))
-                                                return true;
-                                            else
-                                            {
-                                                Errore("Errore in IF definition");
-                                                return false;
-                                            }
-                                        }
-                                        else
-                                            return false;
-                                    }
-                                    else
-                                    {
-                                        Errore("Errore in IF definition");
-                                        return false;
-                                    }
+                                    return true;
                                 }
                             }
                         }
@@ -294,21 +232,130 @@ namespace CodeAnalizer.Models
             }
             catch (ArgumentOutOfRangeException)
             {
-                ErroreOut("Errore in list of operators");
+                ErroreOut("Errore");
             }
             return false;
         }
 
+        private bool CheckPrisv()
+        {
+            if (CheckLexeme("idn"))
+            {
+                if (CheckLexeme("=") && Expression())
+                    return true;
+                else
+                {
+                    Errore("Wrong code after identifier");
+                    return false;
+                }
+            }
+            else
+                return false;
+        }
+
+        private bool ChekWrite()
+        {
+            if (CheckLexeme("write"))
+            {
+                if (CheckLexeme("(") && IdentifiersList() && CheckLexeme(")"))
+                    return true;
+                else
+                {
+                    Errore("Wrong code after write function");
+                    return false;
+                }
+            }
+            else
+                return false;
+        }
+
+        private bool CheckRead()
+        {
+            if (CheckLexeme("read"))
+            {
+                if (CheckLexeme("(") && IdentifiersList() && CheckLexeme(")"))
+                    return true;
+                else
+                {
+                    Errore("Wrong code after read function");
+                    return false;
+                }
+            }
+            else
+                return false;
+        }
+
+        private bool CheckFor()
+        {
+            if (CheckLexeme("for"))
+            {
+                if (CheckLexeme("(") && CheckLexeme("idn") && CheckLexeme("=") && Expression()
+                    && CheckLexeme(";") && LogicalExpression()
+                    && CheckLexeme(";") && Expression() && CheckLexeme(")")
+                    && CheckLexeme("{"))
+                {
+                    if (OperatorsList())
+                    {
+                        if (CheckLexeme("}"))
+                            return true;
+                        else
+                        {
+                            Errore("Errore in FOR definition");
+                            return false;
+                        }
+                    }
+                    else
+                        return false;
+                }
+                else
+                {
+                    Errore("Errore in FOR definition");
+                    return false;
+                }
+
+            }
+            else
+                return false;
+        }
+
+        private bool CheckIf()
+        {
+            if (CheckLexeme("if"))
+            {
+                if (CheckLexeme("(") && LogicalExpression() && CheckLexeme(")") && CheckLexeme("{"))
+                {
+                    if (OperatorsList())
+                    {
+                        if (CheckLexeme("}"))
+                            return true;
+                        else
+                        {
+                            Errore("Errore in IF definition");
+                            return false;
+                        }
+                    }
+                    else
+                        return false;
+                }
+                else
+                {
+                    Errore("Errore in IF definition");
+                    return false;
+                }
+            }
+            else
+                return false;
+        }
 
         private bool Expression()
         {
             try
             {
-                Check("-");
+                CheckLexeme("-");
                 if (Term())
                 {
                     int savedI = i;
-                    while (Check("+") || (Check("-")))
+                    while (CheckLexeme("+") || (CheckLexeme("-")))
                     {
                         if (!Term())
                             return false;
@@ -325,7 +372,6 @@ namespace CodeAnalizer.Models
             {
                 ErroreOut("Errore in expression");
             }
-            Errore("Errore in expresion");
             return false;
         }
 
@@ -337,7 +383,7 @@ namespace CodeAnalizer.Models
                 if (Mult())
                 {
                     int savedI = i;
-                    while (Check("*") || (Check("/")))
+                    while (CheckLexeme("*") || (CheckLexeme("/")))
                     {
                         if (!Mult())
                             return false;
@@ -354,7 +400,6 @@ namespace CodeAnalizer.Models
             {
                 ErroreOut("Errore in expression");
             }
-            Errore("Errore in expression");
             return false;
         }
 
@@ -362,22 +407,120 @@ namespace CodeAnalizer.Models
         {
             try
             {
-                if (Check("con") || Check("idn"))
+                if (CheckLexeme("con") || CheckLexeme("idn"))
                 {
                     return true;
                 }
                 else
                 {
-                    if (Check("(") && Expression() && Check(")"))
+                    if (CheckLexeme("(") && Expression() && CheckLexeme(")"))
                         return true;
                 }
 
             }
             catch (ArgumentOutOfRangeException)
             {
-                ErroreOut("Errore in expression");
+                ErroreOut("Errore");
             }
-            Errore("Errore in expression");
+            return false;
+        }
+
+        private bool RelationSigns()
+        {
+            try
+            {
+                if (CheckLexeme("<") || CheckLexeme(">") || CheckLexeme("==")
+                        || CheckLexeme("<>") || CheckLexeme("<=") || CheckLexeme(">="))
+                    return true;
+
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                ErroreOut("Errore");
+            }
+            Errore("Wrong sing in logical expression");
+            return false;
+        }
+
+        private bool LogicalExpression()
+        {
+            try
+            {
+                if (LogicalTerm())
+                {
+                    int savedI = i;
+                    while (CheckLexeme("or"))
+                    {
+                        if (!LogicalTerm())
+                            return false;
+                        else
+                        {
+                            savedI = i;
+                        }
+                    }
+                    i = savedI;
+                    return true;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                ErroreOut("Errore");
+                return false;
+            }
+            Errore("Errore in logical expression");
+            return false;
+        }
+
+        private bool LogicalTerm()
+        {
+            try
+            {
+                if (LogicalMult())
+                {
+                    int savedI = i;
+                    while (CheckLexeme("and"))
+                    {
+                        if (!LogicalMult())
+                            return false;
+                        else
+                        {
+                            savedI = i;
+                        }
+                    }
+                    i = savedI;
+                    return true;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                ErroreOut("Errore");
+                return false;
+            }
+            return false;
+        }
+        private bool LogicalMult()
+        {
+            try
+            {
+                int savedI = i;
+                while (CheckLexeme("not"))
+                {
+                    savedI = i;
+                }
+                i = savedI;
+                if (Relation())
+                {
+                    return true;
+                }
+                i = savedI;
+                if (CheckLexeme("[") && LogicalExpression() && CheckLexeme("]"))
+                    return true;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                ErroreOut("Errore");
+                return false;
+            }
             return false;
         }
 
@@ -390,113 +533,13 @@ namespace CodeAnalizer.Models
             }
             catch (ArgumentOutOfRangeException)
             {
-                ErroreOut("Errore in logical expression");
+                ErroreOut("Errore");
             }
-            Errore("Errore in logical expression");
             return false;
         }
 
-        private bool RelationSigns()
-        {
-            try
-            {
-                if (Check("<") || Check(">") || Check("==")
-                        || Check("<>") || Check("<=") || Check(">="))
-                    return true;
 
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                ErroreOut("Errore in relation signs");
-            }
-            Errore("Wrong sing in logical expression");
-            return false;
-        }
-
-        //private bool LogicalExpression()
-        //{
-        //    try
-        //    {
-        //        if (LogicalTerm())
-        //        {
-        //            int savedI = i;
-        //            while (Check("or"))
-        //            {
-        //                if (!LogicalTerm())
-        //                    return false;
-        //                else
-        //                {
-        //                    savedI = i;
-        //                }
-        //            }
-        //            i = savedI;
-        //            return true;
-        //        }
-        //    }
-        //    catch (ArgumentOutOfRangeException)
-        //    {
-        //        result = "UNEXPECTED PROGRAM END\r\n";
-        //        return false;
-        //    }
-        //    result += "ERROR IN LOGICAL EXPRESSION\r\n";
-        //    return false;
-        //}
-        //private bool LogicalTerm()
-        //{
-        //    try
-        //    {
-        //        if (LogicalMult())
-        //        {
-        //            int savedI = i;
-        //            while (Check("and"))
-        //            {
-        //                if (!LogicalMult())
-        //                    return false;
-        //                else
-        //                {
-        //                    savedI = i;
-        //                }
-        //            }
-        //            i = savedI;
-        //            return true;
-        //        }
-        //    }
-        //    catch (ArgumentOutOfRangeException)
-        //    {
-        //        result = "UNEXPECTED PROGRAM END\r\n";
-        //        return false;
-        //    }
-        //    return false;
-        //}
-        //private bool LogicalMult()
-        //{
-        //    try
-        //    {
-        //        int savedI = i;
-        //        while (Check("not"))
-        //        {
-        //            savedI = i;
-        //        }
-        //        i = savedI;
-        //        if (Relation())
-        //        {
-        //            return true;
-        //        }
-        //        i = savedI;
-        //        if (Check("[") && LogicalExpression() && Check("]"))
-        //            return true;
-
-
-        //    }
-        //    catch (ArgumentOutOfRangeException )
-        //    {
-        //        result = "UNEXPECTED PROGRAM END\r\n";
-        //        return false;
-        //    }
-        //    return false;
-        //}
-
-        private bool Check(string str)
+        private bool CheckLexeme(string str)
         {
             if (Next().Equals(str))
             {

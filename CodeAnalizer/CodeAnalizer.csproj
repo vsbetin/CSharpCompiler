@@ -96,7 +96,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\RelayCommand.cs" />
-    <Compile Include="Models\SyntaxAnalizer.cs" />
+    <Compile Include="Models\SyntaxAnalizerRecursiveDescent.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\MainPage.xaml.cs">
