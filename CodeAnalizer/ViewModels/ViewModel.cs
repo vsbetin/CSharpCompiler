@@ -146,7 +146,8 @@ int a, b, c;
             IdentifierText = output.identifiersText;
             ConstantText = output.constantText;
 
-            SyntaxAnalizerText = new SyntaxAnalizerRecursiveDescent().Process(_lexicalAnalizer.GetTokens());
+            //SyntaxAnalizerText = new SyntaxAnalizerRecursiveDescent().Process(_lexicalAnalizer.GetTokens());
+            SyntaxAnalizerText = new SyntaxAnalizerAutomate().Process(_lexicalAnalizer.GetTokens());
         }
     }
 }

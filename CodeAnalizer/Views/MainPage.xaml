@@ -26,13 +26,13 @@
 
                     <interactivity:Interaction.Behaviors>
                         <core:EventTriggerBehavior EventName="KeyUp">
-                            <core:InvokeCommandAction Command="{x:Bind ViewModel.AddRow}"/>
+                            <core:InvokeCommandAction Command="{Binding AddRow}"/>
                         </core:EventTriggerBehavior>
                     </interactivity:Interaction.Behaviors>
                 </TextBox>
 
                 <StackPanel Width="200" VerticalAlignment="Center">
-                    <Button Content="Run" Command="{x:Bind ViewModel.Run}" Margin="25" Width="150" Height="50"/>
+                    <Button Content="Run" Command="{Binding Run}" Margin="25" Width="150" Height="50"/>
                 </StackPanel>
                 <TextBox FontSize="14" IsReadOnly="True" Text="{Binding LexemeText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"  
                      BorderThickness="1" BorderBrush="Black" TextWrapping="NoWrap" AcceptsReturn="True" Width="300"
