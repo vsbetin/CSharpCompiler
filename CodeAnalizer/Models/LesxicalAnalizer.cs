@@ -4,59 +4,52 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CodeAnalizer.Models;
 
 namespace CodeAnalizer.Models
 {
     class LexicalAnalyzer
     {
         private static List<string> terminalTokens = new List<string>
-        {   "prog", "int", "float", "double", "read", "write", "if", "else", "then",
+        {   "Prog", "var","int", "float", "double", "read", "write", "if", "then",
             "for", "do", "or", "and", "not", "{", "}", ";", ",", "=", "(",
-            ")", ":", "+", "-", "*", "/", "[", "]", "<", "<=", ">", ">=", "==", "<>", "idn", "con"};
-
+            ")","?",":", "+", "-", "*", "/", "[", "]", "<", "<=", ">", ">=", "==", "<>", "idn", "con", "to", "step"};
 
         private static List<char> tokenSeparators = new List<char>
         { '{', '}', ';', ',', '=', '(', ')', ':', '+', '-', '*', '/', '[', ']', '<', '>'};
-
         private static List<char> whiteSeparators = new List<char>
         { '\n', '\t', ' ', '\r' };
 
-        private List<Token> tokens;
-        private List<Constant> constants;
-        private List<Identifier> identifiers;
+        private List<Token> inputTokens;
+        private List<Constant> inputConstants;
+        private List<Identifier> inputIdentifiers;
+        private List<Error> erorrList;
 
         private bool varDeclareFlag;
 
-        private StringBuilder outputLexems;
-        private StringBuilder outputConstants;
-        private StringBuilder outputIdentifiers;
-
         private int rowCount;
 
-        public List<Token> GetTokens() => tokens;
-
-        public (string lexemeText, string identifiersText, string constantText) Run(string programText)
+        public (List<Token> outputTokens, List<Identifier> outputIdentifiers, List<Constant> outoutConstans, List<Error> errors) Run(string programText)
         {
             rowCount = 1;
             varDeclareFlag = false;
-            tokens = new List<Token>(programText.Split(' ').Length);
-            constants = new List<Constant>();
-            identifiers = new List<Identifier>();
+
+            inputTokens = new List<Token>(programText.Split(' ').Length);
+            inputConstants = new List<Constant>();
+            inputIdentifiers = new List<Identifier>();
+            erorrList = new List<Error>();
 
             bool result = true;
 
             string lex = string.Empty;
-            outputLexems = new StringBuilder();
-            outputConstants = new StringBuilder();
-            outputIdentifiers = new StringBuilder();
-
 
             for (int i = 0; i < programText.Length; i++)
             {
                 if (tokenSeparators.Contains(programText[i]))
                 {
                     if ((programText[i] == '-' || programText[i] == '+') &&
-                        (programText[i - 1] == 'E' || programText[i - 1] == 'e'))
+                        (i != 0 && (programText[i - 1] == 'E'
+                        || programText[i - 1] == 'e')))
                     {
                         lex += programText[i];
                         continue;
@@ -102,15 +95,15 @@ namespace CodeAnalizer.Models
                                 checkLex(">");
                             break;
 
-                        //case '!':
-                        //    if (programText[i + 1] == '=')
-                        //    {
-                        //        checkLex("!=");
-                        //        i++;
-                        //    }
-                        //    else
-                        //        checkLex("!");
-                        //    break;
+                        case '!':
+                            if (programText[i + 1] == '=')
+                            {
+                                checkLex("!=");
+                                i++;
+                            }
+                            else
+                                checkLex("!");
+                            break;
 
                         default:
                             result = checkLex(programText[i].ToString());
@@ -123,7 +116,7 @@ namespace CodeAnalizer.Models
                 }
                 else if (whiteSeparators.Contains(programText[i]))
                 {
-                    if (programText[i] == '\r' || programText[i] == '\n')
+                    if (programText[i] == '\r')
                         rowCount++;
                     if (lex != "")
                         result = checkLex(lex.ToString());
@@ -137,34 +130,7 @@ namespace CodeAnalizer.Models
                 }
             }
 
-            if (result)
-            {
-                string tokenClassIndex = string.Empty;
-                outputLexems.Append("LEXEMS TABLE:\r\n");
-                foreach (var token in tokens)
-                {
-                    if (token is Constant)
-                        tokenClassIndex = ((Constant)token).ClassIndex.ToString();
-                    if (token is Identifier)
-                        tokenClassIndex = ((Identifier)token).ClassIndex.ToString();
-                    outputLexems.Append(token.Row + "\t" + token.Value + "\t\t" + token.Index + "\t\t" +
-                        (string.IsNullOrEmpty(tokenClassIndex) ? null : tokenClassIndex) + "\r\n");
-                    tokenClassIndex = string.Empty;
-                }
-
-                outputIdentifiers.Append("IDENTIFIERS TABLE:\r\n");
-                foreach (var identifier in identifiers)
-                {
-                    outputIdentifiers.Append(identifier.Value + "\t\t" + identifier.ClassIndex + "\r\n");
-                }
-
-                outputConstants.Append("CONSTANTS TABLE:\r\n");
-                foreach (var constant in constants)
-                {
-                    outputConstants.Append(constant.Value + "\t\t" + constant.ClassIndex + "\r\n");
-                }
-            }
-            return (outputLexems.ToString(), outputIdentifiers.ToString(), outputConstants.ToString());
+            return (inputTokens, inputIdentifiers, inputConstants, erorrList);
         }
 
         private bool checkLex(string lex)
@@ -173,14 +139,18 @@ namespace CodeAnalizer.Models
             {
                 if (lex == "-")
                 {
-                    Token lastToken = (Token)tokens[tokens.Count - 1];
-                    if ((lastToken.GeneralizedValue == "idn") || (lastToken.GeneralizedValue == "con"))
-                        lex = "-B";
+                    if (inputTokens.Count != 0)
+                    {
+                        Token lastToken = (Token)inputTokens[inputTokens.Count - 1];
+                        if ((lastToken.Value == "idn") || (lastToken.Value == "con"))
+                            lex = "-B";
+                        else lex = "-U";
+                    }
                     else
                         lex = "-U";
                 }
-                tokens.Add(new Token(lex, getTokenIndex(lex), rowCount));
-                if (!varDeclareFlag && (lex == "float" || lex == "int" || lex == "double"))
+                inputTokens.Add(new Token(lex, getTokenIndex(lex), rowCount));
+                if (!varDeclareFlag && (lex == "strict" || lex == "int" || lex == "double"))
                     varDeclareFlag = true;
                 else if ((varDeclareFlag) && (lex == ";"))
                     varDeclareFlag = false;
@@ -189,54 +159,49 @@ namespace CodeAnalizer.Models
 
             else if (Regex.IsMatch(lex, "^[0-9]+[.]$|^[0-9]*[.]?[0-9]+$|^[0-9]*[.]?[0-9]*[eE][-+]?[0-9]+$"))
             {
-                Constant constant = constants.Find(cons => cons.Value == lex);
+                Constant constant = inputConstants.Find(cons => cons.Value == lex);
                 if (constant != null)
-                    tokens.Add(new Constant(constant.Value, constant.Index, rowCount, constant.ClassIndex));
+                    inputTokens.Add(new Constant(constant.Value, constant.Index, rowCount, constant.ClassIndex));
                 else
                 {
-                    constants.Add(new Constant(lex, getTokenIndex("con"), rowCount, constants.Count + 1));
-                    tokens.Add(constants.Last());
+                    inputConstants.Add(new Constant(lex, terminalTokens.IndexOf("con"), rowCount, inputConstants.Count + 1));
+                    inputTokens.Add(inputConstants.Last());
                 }
                 return true;
             }
 
             else if (Regex.IsMatch(lex, "^[a-zA-Z][a-zA-Z0-9]*$"))
             {
-                if ((varDeclareFlag) || (identifiers.Count == 0))
+                if ((varDeclareFlag) || (inputIdentifiers.Count == 0))
                 {
                     if (IsContainsIdentifire(lex))
                     {
-                        error(1, lex);
+                        registrateError(1, lex);
                         return false;
                     }
-                    identifiers.Add(new Identifier(lex, getTokenIndex("idn"), rowCount, identifiers.Count + 1));
-                    tokens.Add(identifiers.Last());
+                    inputIdentifiers.Add(new Identifier(lex, terminalTokens.IndexOf("idn"), rowCount, inputIdentifiers.Count + 1));
+                    inputTokens.Add(inputIdentifiers.Last());
                     return true;
                 }
 
                 if (IsContainsIdentifire(lex) && !IsIdentifireProgrmaName(lex))
                 {
-                    Identifier ident = identifiers.First(idn => idn.Value.Equals(lex));
-                    tokens.Add(new Identifier(ident.Value, ident.Index, rowCount, ident.ClassIndex));
+                    Identifier ident = inputIdentifiers.First(idn => idn.Value.Equals(lex));
+                    inputTokens.Add(new Identifier(ident.Value, ident.Index, rowCount, ident.ClassIndex));
                     return true;
 
                 }
-                return false;
             }
-            else
-            {
-                error(0, lex);
-                return false;
-            }
-
+            registrateError(0, lex);
+            return false;
         }
 
         private bool IsContainsIdentifire(string lex)
         {
             try
             {
-                Identifier identifier = identifiers.First(idn => idn.Value.Equals(lex));
-                return identifiers.Contains(identifier);
+                Identifier identifier = inputIdentifiers.First(idn => idn.Value.Equals(lex));
+                return inputIdentifiers.Contains(identifier);
             }
             catch
             {
@@ -246,15 +211,15 @@ namespace CodeAnalizer.Models
         }
 
         private bool IsIdentifireProgrmaName(string lex)
-            => identifiers.First().Value.Equals(lex);
+                       => inputIdentifiers.First().Value.Equals(lex);
 
         private int getTokenIndex(string token)
         {
             if (token == "-U")
-                return terminalTokens.IndexOf("-") + 1;
+                return terminalTokens.IndexOf("-");
             if (token == "-B")
-                return terminalTokens.IndexOf("-") + 2;
-            for (int i = 0; i < terminalTokens.IndexOf("-"); i++)
+                return terminalTokens.IndexOf("-") + 1;
+            for (int i = 0; i < terminalTokens.IndexOf("-") - 1; i++)
             {
                 if (terminalTokens[i].Equals(token)) return i + 1;
             }
@@ -265,15 +230,15 @@ namespace CodeAnalizer.Models
             return 0;
         }
 
-        private void error(int code, String lex)
+        private void registrateError(int code, String lex)
         {
             switch (code)
             {
                 case 0:
-                    outputLexems.Append("Wrong input: " + lex + Environment.NewLine + "Row: " + rowCount);
+                    erorrList.Add(new Error(erorrList.Count + 1, rowCount, "Wrong input: " + lex));
                     break;
                 case 1:
-                    outputLexems.Append("ID was already declared: " + lex + Environment.NewLine + "Row: " + rowCount);
+                    erorrList.Add(new Error(erorrList.Count + 1, rowCount, "ID was already declared: " + lex));
                     break;
             }
         }

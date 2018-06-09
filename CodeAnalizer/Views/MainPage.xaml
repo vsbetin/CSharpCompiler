@@ -33,6 +33,9 @@
 
                 <StackPanel Width="200" VerticalAlignment="Center">
                     <Button Content="Run" Command="{Binding Run}" Margin="25" Width="150" Height="50"/>
+                    <TextBlock Margin="25,0,25,5" Name="variableName" Width="30" Text="{Binding VarName, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" FontSize="23"/>
+                    <TextBox Margin="25,0,25,10" Width="109" Name="variableValue" Text="{Binding VarValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="25"/>
+                    <Button Content="OK" Command="{Binding WriteVar}" HorizontalAlignment="Center" Margin="25,0,25,25" Width="100" Height="30"/>
                 </StackPanel>
                 <TextBox FontSize="14" IsReadOnly="True" Text="{Binding LexemeText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"  
                      BorderThickness="1" BorderBrush="Black" TextWrapping="NoWrap" AcceptsReturn="True" Width="300"

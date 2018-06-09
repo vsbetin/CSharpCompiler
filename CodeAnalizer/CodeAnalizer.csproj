@@ -96,7 +96,18 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\RelayCommand.cs" />
+    <Compile Include="Models\AscentSAInfo.cs" />
     <Compile Include="Models\Automate.cs" />
+    <Compile Include="Models\Executer.cs" />
+    <Compile Include="Models\IntermediateCodeGenerator.cs" />
+    <Compile Include="Models\StackElement.cs" />
+    <Compile Include="Models\ICGInfo.cs" />
+    <Compile Include="Models\EqualPair.cs" />
+    <Compile Include="Models\Error.cs" />
+    <Compile Include="Models\ParserAscent.cs" />
+    <Compile Include="Models\PrecedenceTableBuilder.cs" />
+    <Compile Include="Models\Element.cs" />
+    <Compile Include="Models\Symbol.cs" />
     <Compile Include="Models\SyntaxAnalizerAutomate.cs" />
     <Compile Include="Models\SyntaxAnalizerRecursiveDescent.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />

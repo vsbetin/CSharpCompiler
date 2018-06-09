@@ -35,8 +35,8 @@ namespace CodeAnalizer.Models
         {
             try
             {
-                if (CheckLexeme("prog") &&
-                    CheckLexeme("idn") &&
+                if (CheckLexeme("Prog") &&
+                    CheckLexeme("id") &&
                     DeclarationList() &&
                     CheckLexeme("{") &&
                     OperatorsList() &&
@@ -108,7 +108,7 @@ namespace CodeAnalizer.Models
         {
             try
             {
-                if (CheckLexeme("int") || CheckLexeme("float") || CheckLexeme("double"))
+                if (CheckLexeme("var") && (CheckLexeme("int") || CheckLexeme("float") || CheckLexeme("double")))
                 {
                     if (IdentifiersList())
                         return true;
@@ -133,12 +133,12 @@ namespace CodeAnalizer.Models
         {
             try
             {
-                if (CheckLexeme("idn"))
+                if (CheckLexeme("id"))
                 {
                     int savedI = i;
                     while (CheckLexeme(","))
                     {
-                        if (!CheckLexeme("idn"))
+                        if (!CheckLexeme("id"))
                             return false;
                         else
                         {
@@ -239,7 +239,7 @@ namespace CodeAnalizer.Models
 
         private bool CheckPrisv()
         {
-            if (CheckLexeme("idn"))
+            if (CheckLexeme("id"))
             {
                 if (CheckLexeme("=") && Expression())
                     return true;
@@ -289,9 +289,9 @@ namespace CodeAnalizer.Models
         {
             if (CheckLexeme("for"))
             {
-                if (CheckLexeme("(") && CheckLexeme("idn") && CheckLexeme("=") && Expression()
-                    && CheckLexeme(";") && LogicalExpression()
-                    && CheckLexeme(";") && Expression() && CheckLexeme(")")
+                if (CheckLexeme("id") && CheckLexeme("=") && Expression()
+                    && CheckLexeme("to") && Expression()
+                    && CheckLexeme("step") && Expression()
                     && CheckLexeme("{"))
                 {
                     if (OperatorsList())
@@ -407,7 +407,7 @@ namespace CodeAnalizer.Models
         {
             try
             {
-                if (CheckLexeme("con") || CheckLexeme("idn"))
+                if (CheckLexeme("con") || CheckLexeme("id"))
                 {
                     return true;
                 }
